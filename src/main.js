@@ -183,6 +183,7 @@ const weekData = {
 let currentWeek = 'week1';
 let globalBets = [];
 let globalGames = [];
+let gameResults = {}; // Store individual game results
 
 function getSportEmoji(matchup) {
   if (matchup.includes('@') && !matchup.includes('vs')) {
@@ -248,21 +249,23 @@ function renderTodaysGames(games) {
   container.innerHTML = todaysGames.map(game => {
     const isToday = game.date === 'September 13, 2025' && isToday13th;
     const isTomorrow = game.date === 'September 14, 2025';
-    
+
     return `
-      <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all duration-300">
-        <div class="flex items-center space-x-3">
-          <span class="text-2xl">${getSportEmoji(game.matchup)}</span>
-          <div>
-            <h3 class="text-white font-semibold">${game.matchup}</h3>
-            <p class="text-white/70 text-sm">${game.time}</p>
-            <p class="text-white/50 text-xs">${game.date}</p>
+      <div class="card card-compact game-result-card">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">${getSportEmoji(game.matchup)}</span>
+            <div>
+              <h3 class="text-white-readable font-semibold mb-1">${game.matchup}</h3>
+              <p class="text-muted text-sm">${game.time}</p>
+              <p class="text-subtle text-xs">${game.date}</p>
+            </div>
           </div>
-        </div>
-        <div class="flex items-center space-x-2">
-          ${!game.confirmed ? '<span class="px-2 py-1 bg-yellow-600 text-white text-xs rounded-full">Time Unconfirmed</span>' : ''}
-          ${isToday ? '<span class="px-3 py-1 bg-green-600 text-white text-sm rounded-full">Today</span>' : ''}
-          ${isTomorrow ? '<span class="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">Tomorrow</span>' : ''}
+          <div class="flex items-center gap-2">
+            ${!game.confirmed ? '<span class="badge badge-warning">Time Unconfirmed</span>' : ''}
+            ${isToday ? '<span class="badge badge-success">Today</span>' : ''}
+            ${isTomorrow ? '<span class="badge badge-info">Tomorrow</span>' : ''}
+          </div>
         </div>
       </div>
     `;
@@ -289,36 +292,39 @@ function renderWeekendBets(bets) {
   
   const parlayCards = Object.values(parlayGroups).slice(0, 2).map((parlayBets, index) => {
     const firstBet = parlayBets[0];
+    const statusClass = firstBet.status === 'won' ? 'badge-success' : firstBet.status === 'lost' ? 'badge-error' : 'badge-warning';
     return `
-      <div class="glass-effect p-4 rounded-lg hover:bg-white/20 transition-all duration-300 animate-slide-up col-span-2 cursor-pointer" 
+      <div class="card bet-card card-interactive animate-slide-up"
            style="animation-delay: ${index * 0.1}s"
            onclick="toggleParlayStatus(${firstBet.parlayId})">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-2">
-            <span class="text-lg">🎯</span>
-            <span class="text-white font-semibold">${firstBet.parlayType}</span>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🎯</span>
+            <div>
+              <h3 class="text-white-readable font-semibold">${firstBet.parlayType}</h3>
+              <p class="text-muted text-sm">${firstBet.date} at ${firstBet.time}</p>
+            </div>
           </div>
-          <span class="px-2 py-1 rounded-full text-xs font-medium status-${firstBet.status} hover:opacity-80">
+          <span class="badge ${statusClass}">
             ${firstBet.status.charAt(0).toUpperCase() + firstBet.status.slice(1)}
           </span>
         </div>
-        
-        <div class="mb-3">
-          <p class="text-green-300 font-bold">To Win: ${firstBet.winAmount}</p>
-          <p class="text-white/70 text-xs">${firstBet.date} at ${firstBet.time}</p>
+
+        <div class="mb-4">
+          <p class="text-lg font-semibold" style="color: #10b981;">To Win: ${firstBet.winAmount}</p>
         </div>
-        
-        <div class="space-y-1 mb-2">
+
+        <div class="space-y-2 mb-4">
           ${parlayBets.slice(0, 3).map(bet => `
-            <div class="text-xs">
-              <span class="text-white/90">${bet.bet}</span>
-              <div class="text-white/60">${bet.matchup}</div>
+            <div class="text-sm">
+              <div class="text-white-readable font-medium">${bet.bet}</div>
+              <div class="text-muted text-xs">${bet.matchup}</div>
             </div>
           `).join('')}
-          ${parlayBets.length > 3 ? `<div class="text-white/60 text-xs">+${parlayBets.length - 3} more bets</div>` : ''}
+          ${parlayBets.length > 3 ? `<div class="text-muted text-sm">+${parlayBets.length - 3} more bets</div>` : ''}
         </div>
-        
-        <p class="text-white/50 text-xs">Click to change status</p>
+
+        <p class="text-subtle text-xs text-center">Click to change status</p>
       </div>
     `;
   }).join('');
@@ -327,10 +333,10 @@ function renderWeekendBets(bets) {
   
   if (Object.keys(parlayGroups).length > 2) {
     container.innerHTML += `
-      <div class="glass-effect p-4 rounded-lg text-center hover:bg-white/20 transition-all duration-300 cursor-pointer" onclick="showMyBets()">
-        <div class="text-2xl mb-2">👀</div>
-        <p class="text-white font-semibold">+${Object.keys(parlayGroups).length - 2} more parlays</p>
-        <p class="text-white/70 text-sm">Click to view all</p>
+      <div class="card card-interactive text-center" onclick="showMyBets()">
+        <div class="text-3xl mb-3">👀</div>
+        <h3 class="text-white-readable font-semibold mb-2">+${Object.keys(parlayGroups).length - 2} more parlays</h3>
+        <p class="text-muted text-sm">Click to view all</p>
       </div>
     `;
   }
@@ -356,42 +362,43 @@ function renderBets(bets, weekFilter = null) {
   
   const parlayCards = Object.values(parlayGroups).map((parlayBets, index) => {
     const firstBet = parlayBets[0];
+    const statusClass = firstBet.status === 'won' ? 'badge-success' : firstBet.status === 'lost' ? 'badge-error' : 'badge-warning';
     return `
-      <div class="bet-card glass-effect p-6 rounded-xl animate-slide-up col-span-1 md:col-span-2 lg:col-span-1 cursor-pointer hover:scale-105" 
+      <div class="card bet-card card-interactive animate-slide-up"
            style="animation-delay: ${index * 0.1}s"
            onclick="toggleParlayStatus(${firstBet.parlayId})">
         <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center space-x-2">
-            <span class="text-2xl">🎯</span>
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🎯</span>
             <div>
-              <h3 class="text-white font-bold text-lg">${firstBet.parlayType}</h3>
-              <p class="text-green-300 font-semibold">To Win: ${firstBet.winAmount}</p>
+              <h3 class="text-white-readable font-bold text-lg">${firstBet.parlayType}</h3>
+              <p class="text-lg font-semibold" style="color: #10b981;">To Win: ${firstBet.winAmount}</p>
             </div>
           </div>
-          <span class="px-3 py-1 rounded-full text-sm font-medium status-${firstBet.status} hover:opacity-80">
+          <span class="badge ${statusClass}">
             ${firstBet.status.charAt(0).toUpperCase() + firstBet.status.slice(1)}
           </span>
         </div>
-        
-        <div class="space-y-3 mb-4">
+
+        <div class="space-y-4 mb-4">
           ${parlayBets.map(bet => `
-            <div class="border-l-2 border-blue-400 pl-3">
-              <div class="flex items-center space-x-2 mb-1">
-                <span class="text-lg">${getSportEmoji(bet.matchup)}</span>
-                <span class="text-sm">${getBetTypeEmoji(bet.bet)}</span>
+            <div class="pl-4 border-l-2" style="border-color: var(--color-primary);">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xl">${getSportEmoji(bet.matchup)}</span>
+                <span class="text-lg">${getBetTypeEmoji(bet.bet)}</span>
               </div>
-              <h4 class="text-white font-semibold text-sm">${bet.matchup}</h4>
-              <p class="text-white/80 text-sm">${bet.bet}</p>
+              <h4 class="text-white-readable font-semibold mb-1">${bet.matchup}</h4>
+              <p class="text-muted text-sm">${bet.bet}</p>
             </div>
           `).join('')}
         </div>
-        
-        <div class="flex items-center justify-between text-sm text-white/60 pt-3 border-t border-white/10">
-          <span>${firstBet.date} at ${firstBet.time}</span>
-          <span>${parlayBets.length} legs</span>
+
+        <div class="flex items-center justify-between text-sm pt-4 border-t" style="border-color: rgba(255, 255, 255, 0.1);">
+          <span class="text-muted">${firstBet.date} at ${firstBet.time}</span>
+          <span class="badge badge-neutral">${parlayBets.length} legs</span>
         </div>
-        
-        <p class="text-white/50 text-xs mt-2 text-center">Click to change status</p>
+
+        <p class="text-subtle text-xs mt-3 text-center">Click to change status</p>
       </div>
     `;
   }).join('');
@@ -457,33 +464,60 @@ function renderGamesSchedule(games, bets) {
   const dateCards = Object.entries(gamesByDate).map(([date, dayGames]) => {
     const isToday = date === 'September 13, 2025';
     const isTomorrow = date === 'September 14, 2025';
-    
+
     return `
-      <div class="glass-effect p-6 rounded-xl">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold text-white-readable">${date}</h3>
-          <div class="flex items-center space-x-2">
-            ${isToday ? '<span class="px-3 py-1 bg-green-600 text-white text-sm rounded-full">Today</span>' : ''}
-            ${isTomorrow ? '<span class="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">Tomorrow</span>' : ''}
+      <div class="card card-large">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-white-readable">${date}</h3>
+          <div class="flex items-center gap-2">
+            ${isToday ? '<span class="badge badge-success">Today</span>' : ''}
+            ${isTomorrow ? '<span class="badge badge-info">Tomorrow</span>' : ''}
           </div>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${dayGames.map(game => `
-            <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-all duration-300">
-              <div class="flex items-center space-x-3">
-                <span class="text-2xl">${getSportEmoji(game.matchup)}</span>
-                <div>
-                  <h4 class="text-white font-semibold">${game.matchup}</h4>
-                  <p class="text-white/70 text-sm">${game.time}</p>
+
+        <div class="space-y-3">
+          ${dayGames.map(game => {
+            const gameStatus = getGameResultStatus(game.matchup);
+            const statusClasses = {
+              'pending': 'border-orange-500/30 bg-orange-500/5',
+              'won': 'border-green-500/30 bg-green-500/5',
+              'lost': 'border-red-500/30 bg-red-500/5'
+            };
+            const statusLabels = {
+              'pending': 'Click to Set Result',
+              'won': 'Won ✓',
+              'lost': 'Lost ✗'
+            };
+            const statusBadges = {
+              'pending': 'badge-warning',
+              'won': 'badge-success',
+              'lost': 'badge-error'
+            };
+
+            return `
+            <div class="card card-compact game-result-card ${statusClasses[gameStatus]} border-2"
+                 onclick="toggleGameResult('${game.matchup.replace(/'/g, '\\\'').replace(/"/g, '\\"')}')">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <span class="text-3xl">${getSportEmoji(game.matchup)}</span>
+                  <div>
+                    <h4 class="text-white-readable font-semibold text-lg mb-1">${game.matchup}</h4>
+                    <div class="flex items-center gap-3">
+                      <p class="text-muted">${game.time}</p>
+                      ${!game.confirmed ? '<span class="badge badge-warning">Time Unconfirmed</span>' : ''}
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="badge badge-info">Bet Placed</span>
+                  <span class="badge ${statusBadges[gameStatus]}">
+                    ${statusLabels[gameStatus]}
+                  </span>
                 </div>
               </div>
-              <div class="flex items-center space-x-2">
-                ${!game.confirmed ? '<span class="px-2 py-1 bg-yellow-600 text-white text-xs rounded-full">Time Unconfirmed</span>' : ''}
-                <span class="px-2 py-1 bg-purple-600 text-white text-xs rounded-full">Bet Placed</span>
-              </div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       </div>
     `;
@@ -492,14 +526,89 @@ function renderGamesSchedule(games, bets) {
   container.innerHTML = dateCards;
 }
 
+function toggleGameResult(gameMatchup) {
+  const gameKey = gameMatchup.toLowerCase().replace(/['"]/g, '');
+
+  if (!gameResults[gameKey]) {
+    gameResults[gameKey] = 'pending';
+  }
+
+  // Add haptic feedback (if supported)
+  if (navigator.vibrate) {
+    navigator.vibrate(50);
+  }
+
+  // Cycle through statuses: pending -> won -> lost -> pending
+  switch (gameResults[gameKey]) {
+    case 'pending':
+      gameResults[gameKey] = 'won';
+      break;
+    case 'won':
+      gameResults[gameKey] = 'lost';
+      break;
+    case 'lost':
+      gameResults[gameKey] = 'pending';
+      break;
+    default:
+      gameResults[gameKey] = 'pending';
+  }
+
+  // Save to localStorage
+  saveGameResults();
+
+  // Show quick visual feedback
+  const gameCards = document.querySelectorAll('.game-result-card');
+  gameCards.forEach(card => {
+    if (card.getAttribute('onclick')?.includes(gameMatchup)) {
+      card.style.transform = 'scale(0.98)';
+      setTimeout(() => {
+        card.style.transform = '';
+      }, 150);
+    }
+  });
+
+  // Refresh displays
+  refreshAllDisplays();
+}
+
+function saveGameResults() {
+  try {
+    localStorage.setItem('sportsTracker_gameResults', JSON.stringify(gameResults));
+  } catch (error) {
+    console.warn('Could not save game results to localStorage:', error);
+  }
+}
+
+function loadGameResults() {
+  try {
+    const saved = localStorage.getItem('sportsTracker_gameResults');
+    if (saved) {
+      gameResults = JSON.parse(saved);
+    }
+  } catch (error) {
+    console.warn('Could not load game results from localStorage:', error);
+    gameResults = {};
+  }
+}
+
+function getGameResultStatus(gameMatchup) {
+  const gameKey = gameMatchup.toLowerCase().replace(/['"]/g, '');
+  return gameResults[gameKey] || 'pending';
+}
+
 function toggleParlayStatus(parlayId) {
   // Find all bets in the parlay
   const parlayBets = globalBets.filter(bet => bet.parlayId === parlayId);
   if (parlayBets.length === 0) return;
-  
+
+  // Add haptic feedback (if supported)
+  if (navigator.vibrate) {
+    navigator.vibrate(75);
+  }
+
   const currentStatus = parlayBets[0].status;
   let newStatus;
-  
+
   // Cycle through statuses: pending -> won -> lost -> pending
   switch (currentStatus) {
     case 'pending':
@@ -514,29 +623,73 @@ function toggleParlayStatus(parlayId) {
     default:
       newStatus = 'pending';
   }
-  
+
   // Update all bets in the parlay
   globalBets.forEach(bet => {
     if (bet.parlayId === parlayId) {
       bet.status = newStatus;
     }
   });
-  
+
+  // Show quick visual feedback
+  const betCards = document.querySelectorAll('.bet-card');
+  betCards.forEach(card => {
+    if (card.getAttribute('onclick')?.includes(parlayId.toString())) {
+      card.style.transform = 'scale(0.97)';
+      setTimeout(() => {
+        card.style.transform = '';
+      }, 200);
+    }
+  });
+
   // Refresh all displays
   refreshAllDisplays();
 }
 
-function refreshAllDisplays() {
-  renderStats(globalBets);
-  renderTodaysGames(globalGames);
-  renderWeekendBets(globalBets);
-  renderBets(globalBets);
-  
-  // Only render games schedule if we're on the My Bets page
-  const betsSection = document.getElementById('bets');
-  if (!betsSection.classList.contains('hidden')) {
-    renderGamesSchedule(globalGames, globalBets);
+function showLoadingState(containerId) {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.classList.add('loading');
+    container.style.opacity = '0.7';
   }
+}
+
+function hideLoadingState(containerId) {
+  const container = document.getElementById(containerId);
+  if (container) {
+    container.classList.remove('loading');
+    container.style.opacity = '1';
+  }
+}
+
+function refreshAllDisplays() {
+  // Show loading states
+  showLoadingState('weekend-bets');
+  showLoadingState('todays-games');
+  showLoadingState('bets-grid');
+
+  // Small delay to show loading effect
+  setTimeout(() => {
+    renderStats(globalBets);
+    renderTodaysGames(globalGames);
+    renderWeekendBets(globalBets);
+    renderBets(globalBets);
+
+    // Hide loading states
+    hideLoadingState('weekend-bets');
+    hideLoadingState('todays-games');
+    hideLoadingState('bets-grid');
+
+    // Only render games schedule if we're on the My Bets page
+    const betsSection = document.getElementById('bets');
+    if (!betsSection.classList.contains('hidden')) {
+      showLoadingState('games-schedule');
+      setTimeout(() => {
+        renderGamesSchedule(globalGames, globalBets);
+        hideLoadingState('games-schedule');
+      }, 100);
+    }
+  }, 150);
 }
 
 function showMyBets() {
@@ -559,25 +712,40 @@ function setupNavigation() {
   const betsBtn = document.getElementById('bets-btn');
   const dashboardSection = document.getElementById('dashboard');
   const betsSection = document.getElementById('bets');
-  
-  dashboardBtn.addEventListener('click', () => {
-    dashboardSection.classList.remove('hidden');
-    betsSection.classList.add('hidden');
-    dashboardBtn.classList.add('bg-white/20');
-    betsBtn.classList.remove('bg-white/20');
-  });
-  
-  betsBtn.addEventListener('click', () => {
-    betsSection.classList.remove('hidden');
-    dashboardSection.classList.add('hidden');
-    betsBtn.classList.add('bg-white/20');
-    dashboardBtn.classList.remove('bg-white/20');
-    
-    // Render the games schedule when navigating to My Bets
-    renderGamesSchedule(globalGames, globalBets);
-  });
-  
-  dashboardBtn.classList.add('bg-white/20');
+  const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+  const navMenu = document.getElementById('nav-menu');
+
+  // Mobile menu toggle
+  if (mobileMenuToggle) {
+    mobileMenuToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('mobile-menu-open');
+    });
+  }
+
+  function navigateTo(section) {
+    if (section === 'dashboard') {
+      dashboardSection.classList.remove('hidden');
+      betsSection.classList.add('hidden');
+      dashboardBtn.classList.add('active');
+      betsBtn.classList.remove('active');
+    } else {
+      betsSection.classList.remove('hidden');
+      dashboardSection.classList.add('hidden');
+      betsBtn.classList.add('active');
+      dashboardBtn.classList.remove('active');
+      renderGamesSchedule(globalGames, globalBets);
+    }
+
+    // Close mobile menu
+    if (navMenu.classList.contains('mobile-menu-open')) {
+      navMenu.classList.remove('mobile-menu-open');
+    }
+  }
+
+  dashboardBtn.addEventListener('click', () => navigateTo('dashboard'));
+  betsBtn.addEventListener('click', () => navigateTo('bets'));
+
+  dashboardBtn.classList.add('active');
 }
 
 function setupFilters(bets) {
@@ -587,12 +755,10 @@ function setupFilters(bets) {
     const button = document.getElementById(buttonId);
     button.addEventListener('click', () => {
       filterButtons.forEach(id => {
-        document.getElementById(id).classList.remove('bg-blue-600');
-        document.getElementById(id).classList.add('bg-gray-600');
+        document.getElementById(id).classList.remove('active');
       });
-      button.classList.add('bg-blue-600');
-      button.classList.remove('bg-gray-600');
-      
+      button.classList.add('active');
+
       const filter = buttonId.replace('filter-', '');
       const currentWeekBets = globalBets.filter(bet => bet.weekId === currentWeek);
       const filteredBets = filter === 'all' ? currentWeekBets : currentWeekBets.filter(bet => bet.status === filter);
@@ -657,23 +823,28 @@ function updateCurrentWeekDisplay() {
 
 function updateWeekButtonStyles() {
   const weekButtons = ['week-current', 'week-next-1', 'week-next-2'];
-  
+
   weekButtons.forEach((buttonId, index) => {
     const button = document.getElementById(buttonId);
     const weekId = `week${index + 1}`;
-    
+
     if (weekId === currentWeek) {
-      button.classList.add('bg-blue-600/30');
+      button.style.background = 'rgba(37, 99, 235, 0.15)';
+      button.style.borderColor = 'rgba(37, 99, 235, 0.3)';
     } else {
-      button.classList.remove('bg-blue-600/30');
+      button.style.background = '';
+      button.style.borderColor = '';
     }
   });
 }
 
 function init() {
+  // Load saved game results first
+  loadGameResults();
+
   globalGames = parseGameTimes();
   globalBets = parseBets();
-  
+
   renderStats(globalBets);
   renderTodaysGames(globalGames);
   renderWeekendBets(globalBets);
@@ -683,20 +854,28 @@ function init() {
   setupWeekNavigation(globalBets);
   updateCurrentWeekDisplay();
   updateWeekButtonStyles();
-  
+
   console.log('Sports Betting Tracker initialized!');
   console.log(`Found ${globalGames.length} games and ${globalBets.length} individual bets`);
-  
+
   // Group by parlay to show parlay count
   const parlayIds = new Set(globalBets.map(bet => bet.parlayId));
   console.log(`Organized into ${parlayIds.size} parlays`);
-  
+
   // Show parlay details
   parlayIds.forEach(parlayId => {
     const parlayBets = globalBets.filter(bet => bet.parlayId === parlayId);
     const firstBet = parlayBets[0];
     console.log(`Parlay ${parlayId}: ${firstBet.parlayType} - ${firstBet.winAmount} (${parlayBets.length} legs)`);
   });
+
+  // Log loaded game results
+  console.log('Loaded game results:', gameResults);
 }
+
+// Make functions globally accessible
+window.toggleGameResult = toggleGameResult;
+window.toggleParlayStatus = toggleParlayStatus;
+window.showMyBets = showMyBets;
 
 document.addEventListener('DOMContentLoaded', init);

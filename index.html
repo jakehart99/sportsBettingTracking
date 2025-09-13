@@ -10,21 +10,24 @@
 <body>
   <div class="min-h-screen">
     <!-- Header -->
-    <header class="glass-effect sticky top-0 z-50">
+    <header class="nav-header sticky top-0 z-50">
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-4">
-          <div class="flex items-center space-x-2">
+          <a href="#" class="nav-brand">
             <div class="text-3xl">🎯</div>
-            <h1 class="text-2xl font-bold text-white-readable">Sports Betting Tracker</h1>
-          </div>
-          <div class="flex space-x-4">
-            <button id="dashboard-btn" class="px-4 py-2 text-white hover:bg-white/20 rounded-lg transition-all duration-300">
-              Dashboard
+            <span>Sports Betting Tracker</span>
+          </a>
+          <div class="nav-menu" id="nav-menu">
+            <button id="dashboard-btn" class="nav-item">
+              <span>📊 Dashboard</span>
             </button>
-            <button id="bets-btn" class="px-4 py-2 text-white hover:bg-white/20 rounded-lg transition-all duration-300">
-              My Bets
+            <button id="bets-btn" class="nav-item">
+              <span>💰 My Bets</span>
             </button>
           </div>
+          <button id="mobile-menu-toggle" class="nav-item md:hidden">
+            <span>☰</span>
+          </button>
         </div>
       </nav>
     </header>
@@ -34,41 +37,47 @@
       <!-- Dashboard Section -->
       <section id="dashboard" class="animate-fade-in">
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="glass-effect p-6 rounded-xl text-center floating-animation">
-            <div class="text-3xl mb-2">📊</div>
-            <h3 class="text-white text-lg font-semibold mb-2">Total Parlays</h3>
-            <p id="total-bets" class="text-3xl font-bold text-blue-300">0</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+          <div class="card stats-card floating-animation">
+            <div class="stats-icon">📊</div>
+            <div class="stats-value" id="total-bets" style="color: #3b82f6;">0</div>
+            <div class="stats-label">Total Parlays</div>
           </div>
-          <div class="glass-effect p-6 rounded-xl text-center floating-animation" style="animation-delay: 0.1s">
-            <div class="text-3xl mb-2">🏆</div>
-            <h3 class="text-white text-lg font-semibold mb-2">Win Rate</h3>
-            <p id="win-rate" class="text-3xl font-bold text-green-300">0%</p>
+          <div class="card stats-card floating-animation" style="animation-delay: 0.1s">
+            <div class="stats-icon">🏆</div>
+            <div class="stats-value" id="win-rate" style="color: #10b981;">0%</div>
+            <div class="stats-label">Win Rate</div>
           </div>
-          <div class="glass-effect p-6 rounded-xl text-center floating-animation" style="animation-delay: 0.2s">
-            <div class="text-3xl mb-2">⏰</div>
-            <h3 class="text-white text-lg font-semibold mb-2">Upcoming</h3>
-            <p id="upcoming-bets" class="text-3xl font-bold text-yellow-300">0</p>
+          <div class="card stats-card floating-animation" style="animation-delay: 0.2s">
+            <div class="stats-icon">⏰</div>
+            <div class="stats-value" id="upcoming-bets" style="color: #f59e0b;">0</div>
+            <div class="stats-label">Upcoming</div>
           </div>
-          <div class="glass-effect p-6 rounded-xl text-center floating-animation" style="animation-delay: 0.3s">
-            <div class="text-3xl mb-2">💰</div>
-            <h3 class="text-white text-lg font-semibold mb-2">Active Bets</h3>
-            <p id="active-bets" class="text-3xl font-bold text-purple-300">0</p>
+          <div class="card stats-card floating-animation" style="animation-delay: 0.3s">
+            <div class="stats-icon">💰</div>
+            <div class="stats-value" id="active-bets" style="color: #8b5cf6;">0</div>
+            <div class="stats-label">Active Bets</div>
           </div>
         </div>
 
         <!-- This Weekend's Parlays -->
-        <div class="glass-effect p-8 rounded-xl mb-8 animate-slide-up">
-          <h2 class="text-2xl font-bold text-white-readable mb-6">This Weekend's Parlays</h2>
-          <div id="weekend-bets" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div class="card card-large mb-8 animate-slide-up">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold text-white-readable">This Weekend's Parlays</h2>
+            <span class="badge badge-info">Active</span>
+          </div>
+          <div id="weekend-bets" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <!-- Weekend bets will be populated here -->
           </div>
         </div>
 
-        <!-- Quick Overview -->
-        <div class="glass-effect p-8 rounded-xl mb-8 animate-slide-up">
-          <h2 class="text-2xl font-bold text-white-readable mb-6">Upcoming Games</h2>
-          <div id="todays-games" class="space-y-4">
+        <!-- Upcoming Games -->
+        <div class="card card-large mb-8 animate-slide-up" style="animation-delay: 0.1s">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold text-white-readable">Upcoming Games</h2>
+            <span class="badge badge-warning">Live</span>
+          </div>
+          <div id="todays-games" class="space-y-3">
             <!-- Games will be populated here -->
           </div>
         </div>
@@ -76,49 +85,62 @@
 
       <!-- Bets Section -->
       <section id="bets" class="hidden animate-fade-in">
-        <div class="flex justify-between items-center mb-8">
-          <h2 class="text-3xl font-bold text-white-readable">My Betting Portfolio</h2>
-          <div class="flex space-x-2">
-            <button id="filter-all" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300">All</button>
-            <button id="filter-pending" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300">Pending</button>
-            <button id="filter-won" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300">Won</button>
-            <button id="filter-lost" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-300">Lost</button>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+          <div>
+            <h2 class="text-3xl font-semibold text-white-readable mb-2">My Betting Portfolio</h2>
+            <p class="text-muted">Track and manage your sports betting activity</p>
+          </div>
+          <div class="btn-group">
+            <button id="filter-all" class="btn btn-secondary active">All</button>
+            <button id="filter-pending" class="btn btn-secondary">Pending</button>
+            <button id="filter-won" class="btn btn-secondary">Won</button>
+            <button id="filter-lost" class="btn btn-secondary">Lost</button>
           </div>
         </div>
 
         <!-- Week Navigation -->
         <div class="flex justify-center mb-8">
-          <div class="glass-effect p-2 rounded-xl">
-            <div class="flex space-x-2">
-              <button id="week-prev" class="px-4 py-2 text-white hover:bg-white/20 rounded-lg transition-all duration-300">← Previous</button>
-              <div class="px-6 py-2 text-white-readable font-semibold">
-                <span id="current-week-display">Week of Sep 13-14, 2025</span>
+          <div class="card card-compact">
+            <div class="flex items-center justify-between gap-4">
+              <button id="week-prev" class="btn btn-secondary">← Previous</button>
+              <div class="text-center">
+                <div class="text-white-readable font-semibold">
+                  <span id="current-week-display">Week of Sep 13-14, 2025</span>
+                </div>
+                <div class="text-subtle text-sm">Click weeks below to navigate</div>
               </div>
-              <button id="week-next" class="px-4 py-2 text-white hover:bg-white/20 rounded-lg transition-all duration-300">Next →</button>
+              <button id="week-next" class="btn btn-secondary">Next →</button>
             </div>
           </div>
         </div>
 
         <!-- Week Selector -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <button id="week-current" class="glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all duration-300 bg-blue-600/30">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <button id="week-current" class="card card-interactive text-center" style="background: rgba(37, 99, 235, 0.15); border-color: rgba(37, 99, 235, 0.3);">
             <h3 class="text-white-readable font-semibold mb-2">This Weekend</h3>
-            <p class="text-white/70 text-sm">Sep 13-14, 2025</p>
-            <p id="current-week-bet-count" class="text-white/90 font-bold">2 parlays</p>
+            <p class="text-muted text-sm mb-2">Sep 13-14, 2025</p>
+            <div class="flex items-center justify-center gap-1">
+              <span class="badge badge-info" id="current-week-bet-count">2 parlays</span>
+            </div>
           </button>
-          <button id="week-next-1" class="glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all duration-300">
+          <button id="week-next-1" class="card card-interactive text-center">
             <h3 class="text-white-readable font-semibold mb-2">Next Weekend</h3>
-            <p class="text-white/70 text-sm">Sep 20-21, 2025</p>
-            <p class="text-white/90 font-bold">0 parlays</p>
+            <p class="text-muted text-sm mb-2">Sep 20-21, 2025</p>
+            <div class="flex items-center justify-center gap-1">
+              <span class="badge badge-neutral">0 parlays</span>
+            </div>
           </button>
-          <button id="week-next-2" class="glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all duration-300">
+          <button id="week-next-2" class="card card-interactive text-center">
             <h3 class="text-white-readable font-semibold mb-2">Week 3</h3>
-            <p class="text-white/70 text-sm">Sep 27-28, 2025</p>
-            <p class="text-white/90 font-bold">0 parlays</p>
+            <p class="text-muted text-sm mb-2">Sep 27-28, 2025</p>
+            <div class="flex items-center justify-center gap-1">
+              <span class="badge badge-neutral">0 parlays</span>
+            </div>
           </button>
-          <button id="add-week" class="glass-effect p-4 rounded-xl text-center hover:bg-white/20 transition-all duration-300 border-2 border-dashed border-white/30">
-            <h3 class="text-white-readable font-semibold mb-2">+ Add Week</h3>
-            <p class="text-white/70 text-sm">Create new betting week</p>
+          <button id="add-week" class="card card-interactive text-center" style="border: 2px dashed rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.03);">
+            <div class="text-2xl mb-2">➕</div>
+            <h3 class="text-white-readable font-semibold mb-2">Add Week</h3>
+            <p class="text-muted text-sm">Create new betting week</p>
           </button>
         </div>
 
@@ -127,9 +149,15 @@
         </div>
 
         <!-- Games Schedule Section -->
-        <div class="glass-effect p-8 rounded-xl animate-slide-up">
-          <h2 class="text-2xl font-bold text-white-readable mb-6">This Weekend's Games Schedule</h2>
-          <div id="games-schedule" class="space-y-4">
+        <div class="card card-large animate-slide-up">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-2xl font-semibold text-white-readable">This Weekend's Games Schedule</h2>
+              <p class="text-muted">Click games to track results</p>
+            </div>
+            <span class="badge badge-warning">Interactive</span>
+          </div>
+          <div id="games-schedule" class="space-y-6">
             <!-- Games schedule will be populated here -->
           </div>
         </div>
@@ -137,8 +165,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="mt-16 py-8 text-center text-white/70">
-      <p>&copy; 2025 Sports Betting Tracker. Built with modern web technologies.</p>
+    <footer class="mt-16 py-8 text-center">
+      <div class="max-w-7xl mx-auto px-4">
+        <p class="text-subtle text-sm">&copy; 2025 Sports Betting Tracker. Built with modern web technologies.</p>
+      </div>
     </footer>
   </div>
 
